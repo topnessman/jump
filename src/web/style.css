@@ -1,0 +1,75 @@
+/*
+ -*- mode: Fundamental; tab-width: 4; -*-
+ ex:ts=4
+
+ $Id: style.css,v 1.3 2002/06/17 21:35:44 znerd Exp $
+*/
+
+body {
+	font-family: "Verdana", "Lucida";
+	color: #000000;
+	background-color: #ffffff;
+}
+
+h1 {
+	text-align: center;
+	color: #000000;
+	background-color: #ddddff;
+	border-width: thin;
+	border-style: solid;
+	border-color: #8888dd;
+}
+
+h2 {
+	background-color: #ddddff;
+	border-width: thin;
+	border-style: solid none none none;
+	border-color: #8888dd;
+}
+
+table.footer {
+	width: 100%;
+}
+
+table.footer tr td.left {
+	text-align: left;
+}
+
+table.footer tr td.right {
+	text-align: right;
+}
+
+/*
+td {
+	color: #000000;
+	background-color: #ddddff;
+	vertical-align: text-top;
+	border-width: thin;
+	border-style: ridge;
+	border-color: #888888;
+	padding-left: 3pt;
+	padding-right: 3pt;
+}
+*/
+
+p.link {
+	margin-left: 20pt;
+}
+
+a:hover {
+	background-color: #ddddff;
+}
+
+img {
+	border-style: none;
+}
+
+.footer {
+	margin-top: 30pt;
+	border-width: thin;
+	border-style: solid none none none;
+	border-color: #8888dd;
+	font-style: italic;
+	text-align: right;
+	font-size: 80%;
+}

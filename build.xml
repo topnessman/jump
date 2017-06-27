@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+
+<!--
+ -*- mode: Fundamental; tab-width: 4; -*-
+ ex:ts=4
+
+ Build file for the JUMP Ultimate Math Package (JUMP).
+
+ $Id: build.xml,v 1.41 2004/04/15 21:50:32 znerd Exp $
+-->
+
+<project name="jump" default="all" basedir=".">
+
+	<target name="-init">
+		<property name="title"               value="JUMP Ultimate Math Package" />
+		<property name="version"             value="0.5" />
+		<property name="release-version"     value="0.5" />
+		<property name="src-package-tarfile" value="${ant.project.name}-${version}.tar" />
+		<property name="bin-package-tarfile" value="${ant.project.name}-${version}-bin.tar" />
+		<property name="debug"               value="true" />
+		<property name="www.user"            value="znerd" />
+		<property name="www.host"            value="jump-math.sourceforge.net" />
+		<property name="www.dir"             value="/home/groups/j/ju/jump-math/htdocs" />
+		<property name="www.target"          value="${www.user}@${www.host}:${www.dir}" />
+		<property name="url"                 value="http://${www.host}/" />
+		<property name="javadoc.title"       value="${title} ${version}" />
+		<property name="javadoc.footer"      value="See &lt;a href='${url}'&gt;${url}&lt;/a&gt;." />
+
+		<property name="javadoc.srcdir.j2se" value="${java.home}/src" />
+		<property name="javadoc.srcdir.jump" value="build/src/main" />
+	</target>
+
+	<target name="clean" description="Deletes all generated files">
+		<delete dir="build" />
+	</target>
+
+	<target name="-prepare" depends="-init">
+		<mkdir dir="build" />
+	</target>
+
+	<target name="-prepare-src" depends="-prepare">
+		<mkdir dir="build/src" />
+		<mkdir dir="build/src/main" />
+		<copy todir="build/src/main">
+			<fileset dir="src/main" includes="**/*.java" />
+			<fileset dir="src/main" includes="**/package.html" />
+		</copy>
+		<replace dir="build/src/main" token="%%JUMP_VERSION%%" value="${version}" />
+	</target>
+
+	<target name="-prepare-classes" depends="-prepare-src">
+		<mkdir dir="build/classes" />
+	</target>
+
+	<target name="-prepare-web" depends="-prepare">
+		<mkdir dir="build/web" />
+	</target>
+
+	<target name="classes-main" depends="-prepare-classes" description="Compiles the main Java source files">
+		<mkdir dir="build/classes/main" />
+		<javac destdir="build/classes/main" includes="**/*.java" debug="${debug}">
+			<src path="build/src/main" />
+		</javac>
+	</target>
+
+	<target name="classes-examples" depends="classes-main" description="Compiles the examples Java source files">
+		<mkdir dir="build/classes/examples" />
+		<javac destdir="build/classes/examples" includes="**/*.java" debug="${debug}">
+			<src path="src/examples" />
+			<classpath location="build/classes/main" />
+		</javac>
+	</target>
+
+	<target name="-junit-avail">
+		<available classname="junit.framework.Test" property="junit.available" />
+		<fail unless="junit.available" message="JUnit not available" />
+	</target>
+
+	<target name="classes-tests" depends="-junit-avail,classes-main" description="Compiles the test cases">
+		<mkdir dir="build/classes/tests" />
+		<javac destdir="build/classes/tests" includes="**/*.java" debug="${debug}">
+			<src path="src/tests" />
+			<classpath location="build/classes/main" />
+		</javac>
+	</target>
+
+	<target name="classes" depends="classes-main,classes-examples,classes-tests" description="Compiles all Java source files" />
+
+	<target name="do-tests" depends="-junit-avail,classes-tests" description="Runs the unit tests">
+		<mkdir dir="build/testresults" />
+		<mkdir dir="build/testresults/xml" />
+		<junit printsummary="true">
+			<formatter type="xml" />
+			<test name="org.znerd.math.tests.AllTests" todir="build/testresults/xml" outfile="testresults"/>
+			<classpath>
+				<pathelement location="build/classes/main" />
+				<pathelement location="build/classes/tests" />
+			</classpath>
+		</junit>
+	</target>
+
+	<target name="testreports" description="Generates the unit test reports">
+		<mkdir dir="build/testresults/html" />
+		<style
+		in="build/testresults/xml/testresults.xml"
+		out="build/testresults/html/index.html"
+		style="src/xsl/tests/index.xsl" />
+		<copy
+		file="src/xsl/tests/stylesheet.css"
+		todir="build/testresults/html" />
+	</target>
+
+	<target name="tests" depends="do-tests,testreports" description="Runs the unit tests and generates reports" />
+
+	<target name="jar" depends="classes-main" description="Generates the JAR archive">
+		<jar jarfile="build/${ant.project.name}.jar" basedir="build/classes/main" />
+	</target>
+
+	<target name="example" depends="classes-examples" description="Executes the example program">
+		<java classname="org.znerd.math.examples.simple.SimpleExample" classpath="build/${ant.project.name}.jar:build/classes/examples" />
+	</target>
+
+	<target name="-jdksrc-avail">
+		<available file="${javadoc.srcdir.j2se}" type="dir" property="jdksrc.available" />
+	</target>
+
+	<target name="-javadoc-sourcepath-nojdksrc" depends="-prepare,-jdksrc-avail" unless="jdksrc.available">
+		<property name="javadoc.sourcepath" value="${javadoc.srcdir.jump}" />
+		<echo level="verbose" message="JDK source code not available." />
+	</target>
+
+	<target name="-javadoc-sourcepath-jdksrc" depends="-jdksrc-avail" if="jdksrc.available">
+		<property name="javadoc.sourcepath" value="${javadoc.srcdir.jump}:${javadoc.srcdir.j2se}" />
+		<echo level="verbose" message="JDK source code available." />
+	</target>
+
+	<target name="-javadoc-sourcepath" depends="-javadoc-sourcepath-nojdksrc,-javadoc-sourcepath-jdksrc" />
+
+	<target name="apidocs" depends="-prepare-src,-javadoc-sourcepath" description="Generates Javadoc API documentation">
+		<mkdir dir="build/apidocs" />
+		<javadoc
+		sourcepath="${javadoc.sourcepath}"
+		destdir="build/apidocs"
+		packagenames="org.znerd.math"
+		version="yes"
+		use="yes"
+		author="yes"
+		private="no"
+		windowtitle="${javadoc.title}"
+		doctitle="${javadoc.title}"
+		bottom="${javadoc.footer}">
+			<link href="http://java.sun.com/j2se/${java.specification.version}/docs/api" />
+		</javadoc>
+	</target>
+
+	<target name="apidocchecks" depends="-prepare-src" description="Generates API documentation check reports">
+		<available classname="com.sun.tools.doclets.doccheck.DocCheck" property="doccheck.available" />
+		<fail unless="doccheck.available" message="DocCheck doclet not available" />
+		<mkdir dir="build/apidocchecks" />
+		<javadoc sourcepath="build/src/main:${java.home}/src"
+		destdir="build/apidocchecks"
+		packagenames="org.znerd.math"
+		private="yes"
+		doclet="com.sun.tools.doclets.doccheck.DocCheck" />
+	</target>
+
+	<target name="src-package" depends="-prepare" description="Builds a distribution archive with all source files">
+		<tar tarfile="build/${src-package-tarfile}">
+			<tarfileset dir="${basedir}" prefix="${ant.project.name}-${version}" includes="build.xml,src/**/*.java" />
+		</tar>
+		<gzip zipfile="build/${src-package-tarfile}.gz" src="build/${src-package-tarfile}" />
+		<delete file="build/${src-package-tarfile}" />
+	</target>
+
+	<target name="bin-package" depends="apidocs,jar" description="Builds a complete distribution archive">
+		<tar tarfile="build/${bin-package-tarfile}">
+			<tarfileset dir="${basedir}" prefix="${ant.project.name}-${version}" includes="build.xml,src/**/*.java,build/classes/**/*.class,build/apidocs/**,build/${ant.project.name}.jar" />
+		</tar>
+		<gzip zipfile="build/${bin-package-tarfile}.gz" src="build/${bin-package-tarfile}" />
+		<delete file="build/${bin-package-tarfile}" />
+	</target>
+
+	<target name="packages" depends="src-package,bin-package" description="Build both types of distribution archives"/>
+
+	<target name="upload-packages" depends="packages" description="Uploads the packages to the SourceForge FTP server">
+		<ftp server="upload.sourceforge.net" userid="anonymous" password="anonymous" remotedir="incoming" action="put">
+			<fileset dir="build" includes="${src-package-tarfile}.gz,${bin-package-tarfile}.gz" />
+		</ftp>
+	</target>
+
+	<target name="upload-homepage" depends="-prepare" description="Uploads the homepage to the SourceForge WWW server">
+		<mkdir dir="build/web/homepage" />
+		<copy todir="build/web/homepage">
+			<fileset dir="src/web" includes="**/*.html,**/*.css" excludes="redirect-template.html" /> 
+		</copy>
+		<replace dir="build/web/homepage">
+			<replacefilter token="%%JUMP_VERSION%%"         value="${version}" />
+			<replacefilter token="%%JUMP_RELEASE_VERSION%%" value="${release-version}" />
+		</replace>
+		<echo message="Uploading homepage to ${www.host}" />
+		<exec dir="build/web/homepage" executable="scp" failonerror="true">
+			<arg value="-r" />
+			<arg value="." />
+			<arg value="${www.target}" />
+		</exec>
+	</target>
+
+	<target name="upload-apidocs" depends="apidocs" description="Uploads the API documentation to the SourceForge WWW server">
+		<mkdir dir="build/web/apidocs" />
+		<copy todir="build/web/apidocs">
+			<fileset dir="build/apidocs" includes="**/*.html,**/*.css" /> 
+		</copy>
+		<echo message="Uploading API documentation to ${www.host}" />
+		<exec executable="ssh" failonerror="true">
+			<arg value="${www.user}@${www.host}" />
+			<arg value="mkdir -p ${www.dir}/apidocs/${version}" />
+		</exec>
+		<exec dir="build/web/apidocs" executable="scp" failonerror="true">
+			<arg value="-r" />
+			<arg value="." />
+			<arg value="${www.target}/apidocs/${version}/" />
+		</exec>
+		<antcall target="upload-apidocs-current-redirect" />
+	</target>
+
+	<target name="upload-apidocs-current-redirect" depends="-prepare">
+		<mkdir dir="build/web/apidocs-current-redirect" />
+		<copy file="src/web/redirect-template.html" tofile="build/web/apidocs-current-redirect/index.html" />
+		<replace file="build/web/apidocs-current-redirect/index.html" token="%%TARGET%%" value="${version}/index.html" />
+		<echo message="Uploading redirect: apidocs/current.html --> apidocs/${version}/index.html" />
+		<exec dir="build/web/apidocs-current-redirect" executable="scp" failonerror="true">
+			<arg value="index.html" />
+			<arg value="${www.target}/apidocs/current.html" />
+		</exec>
+	</target>
+
+	<target name="upload-apidocs-release-redirect" depends="-prepare">
+		<mkdir dir="build/web/apidocs-release-redirect" />
+		<copy file="src/web/redirect-template.html" tofile="build/web/apidocs-release-redirect/index.html" />
+		<replace file="build/web/apidocs-release-redirect/index.html" token="%%TARGET%%" value="${version}/index.html" />
+		<echo message="Uploading redirect: apidocs/index.html --> apidocs/${version}/index.html" />
+		<exec dir="build/web/apidocs-release-redirect" executable="scp" failonerror="true">
+			<arg value="index.html" />
+			<arg value="${www.target}/apidocs/index.html" />
+		</exec>
+	</target>
+
+	<target name="upload-web" depends="upload-homepage,upload-apidocs" description="Uploads everything to the SourceForge WWW server" />
+
+	<target name="upload-release" depends="upload-web,upload-apidocs-release-redirect,upload-packages" />
+
+	<target name="all" depends="jar,apidocs,packages" description="Builds everything"/>
+</project>

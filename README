@@ -1,0 +1,12 @@
+JUMP Ultimate Math Package
+$Id: README,v 1.1 2002/08/16 20:42:30 znerd Exp $
+
+Java-based extensible high-precision math package. Includes support for
+computations based on fractions. Support is included for converting to
+floating point numbers and BigDecimals.
+
+Homepage: http://jump-math.sourceforge.net/
+
+This library is distributed under the terms of the BSD license contained in
+the COPYRIGHT file. This license has been approved by the Open Source
+Initiative. See: http://www.opensource.org/licenses/bsd-license.php
