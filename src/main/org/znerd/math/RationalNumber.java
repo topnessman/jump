@@ -3,6 +3,8 @@
  */
 package org.znerd.math;
 
+import org.checkerframework.checker.initialization.qual.NotOnlyInitialized;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -284,7 +286,7 @@ public abstract class RationalNumber extends RealNumber {
     * The numerator. This field is initialized by the constructor, it can
     * never be <code>null</code>.
     */
-   private final IntegerNumber _numerator;
+   private final @NotOnlyInitialized IntegerNumber _numerator;
 
    /**
     * The denominator. This field is initialized by the constructor, it can

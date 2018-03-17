@@ -60,6 +60,9 @@
 		<mkdir dir="build/classes/main" />
 		<javac destdir="build/classes/main" includes="**/*.java" debug="${debug}">
 			<src path="build/src/main" />
+			<classpath>
+				<pathelement location="/home/mier/jsr308/checker-framework/checker/build" />
+			</classpath>
 		</javac>
 	</target>
 
@@ -191,7 +194,7 @@
 	<target name="upload-homepage" depends="-prepare" description="Uploads the homepage to the SourceForge WWW server">
 		<mkdir dir="build/web/homepage" />
 		<copy todir="build/web/homepage">
-			<fileset dir="src/web" includes="**/*.html,**/*.css" excludes="redirect-template.html" /> 
+			<fileset dir="src/web" includes="**/*.html,**/*.css" excludes="redirect-template.html" />
 		</copy>
 		<replace dir="build/web/homepage">
 			<replacefilter token="%%JUMP_VERSION%%"         value="${version}" />
@@ -208,7 +211,7 @@
 	<target name="upload-apidocs" depends="apidocs" description="Uploads the API documentation to the SourceForge WWW server">
 		<mkdir dir="build/web/apidocs" />
 		<copy todir="build/web/apidocs">
-			<fileset dir="build/apidocs" includes="**/*.html,**/*.css" /> 
+			<fileset dir="build/apidocs" includes="**/*.html,**/*.css" />
 		</copy>
 		<echo message="Uploading API documentation to ${www.host}" />
 		<exec executable="ssh" failonerror="true">
